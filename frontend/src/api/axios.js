@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 const api = axios.create({
-  baseURL: 'https://hotel-pms-production-d20a.up.railway.app',
+  baseURL: 'https://hotel-pms-ipf1.onrender.com',
   headers: { 'Content-Type': 'application/json' }
 })
 
