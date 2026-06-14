@@ -13,11 +13,11 @@ import Layout from './components/Layout'
 function PrivateRoute({ children }) {
   const { user, loading } = useAuth()
   if (loading) return (
-    <div className="flex items-center justify-center h-screen text-slate-500">
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',height:'100vh'}}>
       Loading...
     </div>
   )
-  return user ? children : <Navigate to="/login" />
+  return user ? children : <Navigate to="/login" replace />
 }
 
 function AppRoutes() {
@@ -33,6 +33,7 @@ function AppRoutes() {
         <Route path="invoices" element={<Invoices />} />
         <Route path="calendar" element={<Calendar />} />
       </Route>
+      <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   )
 }
