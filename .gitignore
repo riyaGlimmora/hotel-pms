@@ -6,3 +6,19 @@ frontend/node_modules/
 frontend/dist/
 .DS_Store
 *.pyc
+# Environment files
+.env
+.env.local
+.env.development
+.env.production
+
+# Dependencies
+node_modules/
+
+# Build files
+dist/
+build/
+
+# Python
+__pycache__/
+*.pyc
