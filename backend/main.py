@@ -13,8 +13,8 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:5173",
         "https://hotel-pms-five.vercel.app",
-        "https://hotel-cqins789x-riya-vlog.vercel.app",
     ],
+    allow_origin_regex=r"https://hotel-.*\.vercel\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
