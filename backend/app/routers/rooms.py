@@ -4,7 +4,7 @@ from typing import List
 from app.database import get_db
 from app.models.room import Room
 from app.schemas.room import RoomCreate, RoomUpdate, RoomOut
-from app.core.deps import get_current_user
+from app.core.deps import get_current_user, require_admin
 
 router = APIRouter(prefix="/api/rooms", tags=["Rooms"])
 
@@ -13,7 +13,7 @@ def get_rooms(db: Session = Depends(get_db), current_user=Depends(get_current_us
     return db.query(Room).all()
 
 @router.post("/", response_model=RoomOut)
-def create_room(data: RoomCreate, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+def create_room(data: RoomCreate, db: Session = Depends(get_db), current_user=Depends(require_admin)):
     existing = db.query(Room).filter(Room.room_number == data.room_number).first()
     if existing:
         raise HTTPException(status_code=400, detail="Room number already exists")
@@ -24,7 +24,7 @@ def create_room(data: RoomCreate, db: Session = Depends(get_db), current_user=De
     return room
 
 @router.put("/{room_id}", response_model=RoomOut)
-def update_room(room_id: int, data: RoomUpdate, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+def update_room(room_id: int, data: RoomUpdate, db: Session = Depends(get_db), current_user=Depends(require_admin)):
     room = db.query(Room).filter(Room.id == room_id).first()
     if not room:
         raise HTTPException(status_code=404, detail="Room not found")
@@ -35,7 +35,7 @@ def update_room(room_id: int, data: RoomUpdate, db: Session = Depends(get_db), c
     return room
 
 @router.delete("/{room_id}")
-def delete_room(room_id: int, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+def delete_room(room_id: int, db: Session = Depends(get_db), current_user=Depends(require_admin)):
     room = db.query(Room).filter(Room.id == room_id).first()
     if not room:
         raise HTTPException(status_code=404, detail="Room not found")

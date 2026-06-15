@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import api from '../../api/axios'
+import { useAuth } from '../../context/AuthContext'
 
 function StatCard({ title, value, icon, color }) {
   return (
@@ -16,6 +17,8 @@ function StatCard({ title, value, icon, color }) {
 }
 
 export default function Dashboard() {
+  const { user } = useAuth()
+
   const { data: rooms = [] } = useQuery({
     queryKey: ['rooms'],
     queryFn: () => api.get('/api/rooms/').then(r => r.data)
@@ -61,10 +64,12 @@ export default function Dashboard() {
         <StatCard title="Maintenance" value={maintenance} icon="🔧" color="bg-yellow-50" />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
+      <div className={`grid grid-cols-1 ${user?.role === 'admin' ? 'lg:grid-cols-3' : 'lg:grid-cols-2'} gap-4 mb-8`}>
         <StatCard title="Active Bookings" value={activeBookings} icon="📋" color="bg-purple-50" />
         <StatCard title="Total Bookings" value={bookings.length} icon="📅" color="bg-indigo-50" />
-        <StatCard title="Total Revenue" value={`₹${totalRevenue.toLocaleString()}`} icon="💰" color="bg-emerald-50" />
+        {user?.role === 'admin' && (
+          <StatCard title="Total Revenue" value={`₹${totalRevenue.toLocaleString()}`} icon="💰" color="bg-emerald-50" />
+        )}
       </div>
 
       {/* Recent Bookings */}

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import toast from 'react-hot-toast'
 import api from '../../api/axios'
 
 const statusColor = {
@@ -15,7 +16,6 @@ export default function Bookings() {
   const qc = useQueryClient()
   const [showModal, setShowModal] = useState(false)
   const [form, setForm] = useState(empty)
-  const [error, setError] = useState('')
   const [filter, setFilter] = useState('all')
 
   const { data: bookings = [], isLoading } = useQuery({
@@ -29,16 +29,17 @@ export default function Bookings() {
 
   const createBooking = useMutation({
     mutationFn: data => api.post('/api/bookings/', data),
-    onSuccess: () => { qc.invalidateQueries(['bookings']); qc.invalidateQueries(['rooms']); closeModal() },
-    onError: e => setError(e.response?.data?.detail || 'Failed to create booking')
+    onSuccess: () => { toast.success('Booking created successfully!'); qc.invalidateQueries(['bookings']); qc.invalidateQueries(['rooms']); closeModal() },
+    onError: e => toast.error(e.response?.data?.detail || 'Failed to create booking')
   })
 
   const cancelBooking = useMutation({
     mutationFn: id => api.delete(`/api/bookings/${id}`),
-    onSuccess: () => { qc.invalidateQueries(['bookings']); qc.invalidateQueries(['rooms']) }
+    onSuccess: () => { toast.success('Booking cancelled successfully!'); qc.invalidateQueries(['bookings']); qc.invalidateQueries(['rooms']) },
+    onError: e => toast.error(e.response?.data?.detail || 'Failed to cancel booking')
   })
 
-  const closeModal = () => { setShowModal(false); setForm(empty); setError('') }
+  const closeModal = () => { setShowModal(false); setForm(empty) }
 
   const handleSubmit = e => {
     e.preventDefault()
@@ -55,7 +56,7 @@ export default function Bookings() {
           <h1 className="text-2xl font-bold text-slate-800">Bookings</h1>
           <p className="text-slate-500 text-sm mt-1">{bookings.length} total bookings</p>
         </div>
-        <button onClick={() => { setShowModal(true); setError('') }}
+        <button onClick={() => setShowModal(true)}
           className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
           + New Booking
         </button>
@@ -108,7 +109,11 @@ export default function Bookings() {
                     </td>
                     <td className="px-4 py-4">
                       {b.status === 'confirmed' && (
-                        <button onClick={() => { if(confirm('Cancel this booking?')) cancelBooking.mutate(b.id) }}
+                        <button onClick={() => {
+                          if(confirm('Are you sure you want to cancel this booking?')) {
+                            cancelBooking.mutate(b.id)
+                          }
+                        }}
                           className="text-xs bg-red-50 hover:bg-red-100 text-red-600 px-3 py-1 rounded-lg">
                           Cancel
                         </button>
@@ -127,7 +132,6 @@ export default function Bookings() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
             <h2 className="text-lg font-semibold text-slate-800 mb-4">New Booking</h2>
-            {error && <div className="bg-red-50 text-red-600 px-4 py-2 rounded-lg mb-4 text-sm">{error}</div>}
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Guest Name</label>

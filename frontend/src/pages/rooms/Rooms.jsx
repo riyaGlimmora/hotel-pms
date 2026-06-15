@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import toast from 'react-hot-toast'
 import api from '../../api/axios'
+import { useAuth } from '../../context/AuthContext'
 
 const ROOM_TYPES = ['Standard', 'Deluxe', 'Suite']
 const STATUSES = ['available', 'occupied', 'maintenance']
@@ -14,11 +16,11 @@ const statusColor = {
 const empty = { room_number: '', room_type: 'Standard', price_per_night: '', status: 'available', description: '' }
 
 export default function Rooms() {
+  const { user } = useAuth()
   const qc = useQueryClient()
   const [showModal, setShowModal] = useState(false)
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState(empty)
-  const [error, setError] = useState('')
 
   const { data: rooms = [], isLoading } = useQuery({
     queryKey: ['rooms'],
@@ -27,26 +29,27 @@ export default function Rooms() {
 
   const createRoom = useMutation({
     mutationFn: data => api.post('/api/rooms/', data),
-    onSuccess: () => { qc.invalidateQueries(['rooms']); closeModal() },
-    onError: e => setError(e.response?.data?.detail || 'Failed to create room')
+    onSuccess: () => { toast.success('Room created successfully!'); qc.invalidateQueries(['rooms']); closeModal() },
+    onError: e => toast.error(e.response?.data?.detail || 'Failed to create room')
   })
 
   const updateRoom = useMutation({
     mutationFn: ({ id, data }) => api.put(`/api/rooms/${id}`, data),
-    onSuccess: () => { qc.invalidateQueries(['rooms']); closeModal() },
-    onError: e => setError(e.response?.data?.detail || 'Failed to update room')
+    onSuccess: () => { toast.success('Room updated successfully!'); qc.invalidateQueries(['rooms']); closeModal() },
+    onError: e => toast.error(e.response?.data?.detail || 'Failed to update room')
   })
 
   const deleteRoom = useMutation({
     mutationFn: id => api.delete(`/api/rooms/${id}`),
-    onSuccess: () => qc.invalidateQueries(['rooms'])
+    onSuccess: () => { toast.success('Room deleted successfully!'); qc.invalidateQueries(['rooms']) },
+    onError: e => toast.error(e.response?.data?.detail || 'Failed to delete room')
   })
 
-  const openCreate = () => { setForm(empty); setEditing(null); setError(''); setShowModal(true) }
+  const openCreate = () => { setForm(empty); setEditing(null); setShowModal(true) }
   const openEdit = room => {
     setForm({ room_number: room.room_number, room_type: room.room_type,
       price_per_night: room.price_per_night, status: room.status, description: room.description || '' })
-    setEditing(room.id); setError(''); setShowModal(true)
+    setEditing(room.id); setShowModal(true)
   }
   const closeModal = () => { setShowModal(false); setEditing(null); setForm(empty) }
 
@@ -64,10 +67,12 @@ export default function Rooms() {
           <h1 className="text-2xl font-bold text-slate-800">Rooms</h1>
           <p className="text-slate-500 text-sm mt-1">{rooms.length} total rooms</p>
         </div>
-        <button onClick={openCreate}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-          + Add Room
-        </button>
+        {user?.role === 'admin' && (
+          <button onClick={openCreate}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+            + Add Room
+          </button>
+        )}
       </div>
 
       {/* Stats row */}
@@ -113,16 +118,18 @@ export default function Rooms() {
                     </td>
                     <td className="px-6 py-4 text-sm text-slate-500 max-w-xs truncate">{room.description || '—'}</td>
                     <td className="px-6 py-4">
-                      <div className="flex gap-2">
-                        <button onClick={() => openEdit(room)}
-                          className="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1 rounded-lg transition-colors">
-                          Edit
-                        </button>
-                        <button onClick={() => { if(confirm('Delete this room?')) deleteRoom.mutate(room.id) }}
-                          className="text-xs bg-red-50 hover:bg-red-100 text-red-600 px-3 py-1 rounded-lg transition-colors">
-                          Delete
-                        </button>
-                      </div>
+                      {user?.role === 'admin' && (
+                        <div className="flex gap-2">
+                          <button onClick={() => openEdit(room)}
+                            className="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1 rounded-lg transition-colors">
+                            Edit
+                          </button>
+                          <button onClick={() => { if(confirm('Delete this room?')) deleteRoom.mutate(room.id) }}
+                            className="text-xs bg-red-50 hover:bg-red-100 text-red-600 px-3 py-1 rounded-lg transition-colors">
+                            Delete
+                          </button>
+                        </div>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -139,7 +146,6 @@ export default function Rooms() {
             <h2 className="text-lg font-semibold text-slate-800 mb-4">
               {editing ? 'Edit Room' : 'Add New Room'}
             </h2>
-            {error && <div className="bg-red-50 text-red-600 px-4 py-2 rounded-lg mb-4 text-sm">{error}</div>}
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Room Number</label>

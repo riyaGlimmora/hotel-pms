@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
+import { Toaster } from 'react-hot-toast'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import Login from './pages/auth/Login'
 import Register from './pages/auth/Register'
@@ -8,6 +9,7 @@ import Bookings from './pages/bookings/Bookings'
 import CheckIn from './pages/checkin/CheckIn'
 import Invoices from './pages/invoices/Invoices'
 import Calendar from './pages/calendar/Calendar'
+import Guests from './pages/guests/Guests'
 import Layout from './components/Layout'
 
 function PrivateRoute({ children }) {
@@ -32,6 +34,7 @@ function AppRoutes() {
         <Route path="checkin" element={<CheckIn />} />
         <Route path="invoices" element={<Invoices />} />
         <Route path="calendar" element={<Calendar />} />
+        <Route path="guests" element={<Guests />} />
       </Route>
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
@@ -41,6 +44,7 @@ function AppRoutes() {
 export default function App() {
   return (
     <AuthProvider>
+      <Toaster position="top-right" />
       <AppRoutes />
     </AuthProvider>
   )

@@ -1,23 +1,23 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
+import toast from 'react-hot-toast'
 import { useAuth } from '../../context/AuthContext'
 
 export default function Register() {
   const { register } = useAuth()
   const navigate = useNavigate()
   const [form, setForm] = useState({ email: '', full_name: '', password: '', role: 'staff' })
-  const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
-    setError('')
     try {
       await register(form.email, form.full_name, form.password, form.role)
+      toast.success('Account created! Redirecting to login...')
       navigate('/login')
     } catch (err) {
-      setError(err.response?.data?.detail || 'Registration failed')
+      toast.error(err.response?.data?.detail || 'Registration failed')
     } finally {
       setLoading(false)
     }
@@ -30,11 +30,6 @@ export default function Register() {
           <h1 className="text-3xl font-bold text-slate-800">🏨 Hotel PMS</h1>
           <p className="text-slate-500 mt-2">Create your account</p>
         </div>
-        {error && (
-          <div className="bg-red-50 text-red-600 px-4 py-3 rounded-lg mb-4 text-sm">
-            {error}
-          </div>
-        )}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Full Name</label>

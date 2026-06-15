@@ -8,6 +8,7 @@ const navItems = [
   { to: '/checkin',  label: '✅ Check-in'  },
   { to: '/invoices', label: '🧾 Invoices'  },
   { to: '/calendar', label: '📅 Calendar'  },
+  { to: '/guests',   label: '👥 Guests'    },
 ]
 
 export default function Layout() {

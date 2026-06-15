@@ -16,7 +16,9 @@ class Booking(Base):
 
     room_id = Column(Integer, ForeignKey("rooms.id"), nullable=False)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    guest_id = Column(Integer, ForeignKey("guests.id"), nullable=True)
 
     room = relationship("Room", back_populates="bookings")
     created_by = relationship("User", back_populates="bookings")
+    guest = relationship("Guest", back_populates="bookings")
     invoice = relationship("Invoice", back_populates="booking", uselist=False)

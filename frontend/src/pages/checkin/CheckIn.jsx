@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import toast from 'react-hot-toast'
 import api from '../../api/axios'
 
 const statusColor = {
@@ -18,12 +19,14 @@ export default function CheckIn() {
 
   const checkIn = useMutation({
     mutationFn: id => api.post(`/api/checkin/${id}/checkin`),
-    onSuccess: () => { qc.invalidateQueries(['bookings']); qc.invalidateQueries(['rooms']) }
+    onSuccess: () => { toast.success('Guest checked in successfully!'); qc.invalidateQueries(['bookings']); qc.invalidateQueries(['rooms']) },
+    onError: e => toast.error(e.response?.data?.detail || 'Failed to check in')
   })
 
   const checkOut = useMutation({
     mutationFn: id => api.post(`/api/checkin/${id}/checkout`),
-    onSuccess: () => { qc.invalidateQueries(['bookings']); qc.invalidateQueries(['rooms']); qc.invalidateQueries(['invoices']) }
+    onSuccess: () => { toast.success('Guest checked out successfully!'); qc.invalidateQueries(['bookings']); qc.invalidateQueries(['rooms']); qc.invalidateQueries(['invoices']) },
+    onError: e => toast.error(e.response?.data?.detail || 'Failed to check out')
   })
 
   const active = bookings.filter(b => ['confirmed','checked_in'].includes(b.status))
