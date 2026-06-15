@@ -57,6 +57,33 @@ export default function Guests() {
 
   const handleSubmit = e => {
     e.preventDefault()
+    
+    // Validation
+    if (!form.name.trim()) {
+      toast.error('Guest name is required')
+      return
+    }
+    if (!form.email.trim()) {
+      toast.error('Email is required')
+      return
+    }
+    if (!form.phone.trim()) {
+      toast.error('Phone number is required')
+      return
+    }
+    if (form.phone.replace(/\D/g, '').length < 10) {
+      toast.error('Phone number must be at least 10 digits')
+      return
+    }
+    if (!form.id_type.trim()) {
+      toast.error('ID type is required')
+      return
+    }
+    if (!form.id_number.trim()) {
+      toast.error('ID number is required')
+      return
+    }
+    
     if (editing) updateGuest.mutate({ id: editing, data: form })
     else createGuest.mutate(form)
   }
@@ -182,11 +209,14 @@ export default function Guests() {
                   placeholder="john@example.com" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Phone *</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Phone * (min. 10 digits)</label>
                 <input required value={form.phone}
                   onChange={e => setForm({...form, phone: e.target.value})}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${form.phone && form.phone.replace(/\\D/g, '').length < 10 ? 'border-red-300' : 'border-gray-300'}`}
                   placeholder="+91 98765 43210" />
+                {form.phone && form.phone.replace(/\D/g, '').length < 10 && (
+                  <p className="text-xs text-red-500 mt-1">❌ Phone must have at least 10 digits</p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Address</label>
@@ -197,8 +227,8 @@ export default function Guests() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">ID Type</label>
-                  <select value={form.id_type} onChange={e => setForm({...form, id_type: e.target.value})}
+                  <label className="block text-sm font-medium text-slate-700 mb-1">ID Type *</label>
+                  <select required value={form.id_type} onChange={e => setForm({...form, id_type: e.target.value})}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                     <option value="">Select...</option>
                     <option value="passport">Passport</option>
@@ -208,8 +238,8 @@ export default function Guests() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">ID Number</label>
-                  <input value={form.id_number} disabled={!!editing}
+                  <label className="block text-sm font-medium text-slate-700 mb-1">ID Number *</label>
+                  <input required value={form.id_number} disabled={!!editing}
                     onChange={e => setForm({...form, id_number: e.target.value})}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
                     placeholder="ABC123..." />
