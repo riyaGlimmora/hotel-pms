@@ -22,3 +22,4 @@ class Booking(Base):
     created_by = relationship("User", back_populates="bookings")
     guest = relationship("Guest", back_populates="bookings")
     invoice = relationship("Invoice", back_populates="booking", uselist=False)
+    extra_charges = relationship("ExtraCharge", back_populates="booking")

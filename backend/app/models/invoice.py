@@ -10,6 +10,7 @@ class Invoice(Base):
     total_amount = Column(Float, nullable=False)
     nights_stayed = Column(Integer, nullable=False)
     room_rate = Column(Float, nullable=False)
+    extra_charges_total = Column(Float, default=0)
     issued_at = Column(DateTime(timezone=True), server_default=func.now())
 
     booking_id = Column(Integer, ForeignKey("bookings.id"), nullable=False)

@@ -17,6 +17,9 @@ export default function Bookings() {
   const [showModal, setShowModal] = useState(false)
   const [form, setForm] = useState(empty)
   const [filter, setFilter] = useState('all')
+  const [searchGuest, setSearchGuest] = useState('')
+  const [dateFrom, setDateFrom] = useState('')
+  const [dateTo, setDateTo] = useState('')
 
   const { data: bookings = [], isLoading } = useQuery({
     queryKey: ['bookings'],
@@ -48,6 +51,13 @@ export default function Bookings() {
 
   const availableRooms = rooms.filter(r => r.status === 'available')
   const filtered = filter === 'all' ? bookings : bookings.filter(b => b.status === filter)
+  
+  const withFilters = filtered.filter(b => {
+    const matchGuest = b.guest_name.toLowerCase().includes(searchGuest.toLowerCase())
+    const matchDateFrom = !dateFrom || b.check_in >= dateFrom
+    const matchDateTo = !dateTo || b.check_out <= dateTo
+    return matchGuest && matchDateFrom && matchDateTo
+  })
 
   return (
     <div className="p-8">
@@ -74,14 +84,39 @@ export default function Bookings() {
         ))}
       </div>
 
+      {/* Search and Date Filters */}
+      <div className="grid grid-cols-3 gap-4 mb-6">
+        <input
+          type="text"
+          placeholder="Search by guest name..."
+          value={searchGuest}
+          onChange={e => setSearchGuest(e.target.value)}
+          className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        <input
+          type="date"
+          value={dateFrom}
+          onChange={e => setDateFrom(e.target.value)}
+          className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="From date"
+        />
+        <input
+          type="date"
+          value={dateTo}
+          onChange={e => setDateTo(e.target.value)}
+          className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="To date"
+        />
+      </div>
+
       {/* Table */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100">
         {isLoading ? (
           <div className="p-12 text-center text-slate-400">Loading...</div>
-        ) : filtered.length === 0 ? (
+        ) : withFilters.length === 0 ? (
           <div className="p-12 text-center text-slate-400">
             <p className="text-4xl mb-3">📋</p>
-            <p>No bookings found</p>
+            <p>No bookings match your filters</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -94,7 +129,7 @@ export default function Bookings() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {filtered.map(b => (
+                {withFilters.map(b => (
                   <tr key={b.id} className="hover:bg-gray-50">
                     <td className="px-4 py-4 text-sm text-slate-400">#{b.id}</td>
                     <td className="px-4 py-4 text-sm font-medium text-slate-800">{b.guest_name}</td>

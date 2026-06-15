@@ -1,8 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.database import Base, engine
-from app.models import user, room, booking, invoice, guest
-from app.routers import auth, rooms, bookings, checkin, invoices, availability, guests
+from app.models import user, room, booking, invoice, guest, extra_charge
+from app.routers import auth, rooms, bookings, checkin, invoices, availability, guests, extra_charges
 
 Base.metadata.create_all(bind=engine)
 
@@ -27,6 +27,7 @@ app.include_router(checkin.router)
 app.include_router(invoices.router)
 app.include_router(availability.router)
 app.include_router(guests.router)
+app.include_router(extra_charges.router)
 
 @app.get("/")
 def root():

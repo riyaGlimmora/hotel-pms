@@ -7,6 +7,7 @@ class InvoiceOut(BaseModel):
     total_amount: float
     nights_stayed: int
     room_rate: float
+    extra_charges_total: float
     issued_at: datetime
     booking_id: int
     booking: BookingOut

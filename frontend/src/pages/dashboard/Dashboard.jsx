@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import api from '../../api/axios'
 import { useAuth } from '../../context/AuthContext'
 
@@ -38,6 +39,56 @@ export default function Dashboard() {
   const activeBookings = bookings.filter(b => ['confirmed','checked_in'].includes(b.status)).length
   const totalRevenue = invoices.reduce((sum, inv) => sum + inv.total_amount, 0)
 
+  // Calculate monthly revenue for admin
+  const monthlyRevenueData = user?.role === 'admin' ? (() => {
+    const months = {}
+    invoices.forEach(inv => {
+      const date = new Date(inv.created_at)
+      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+      months[monthKey] = (months[monthKey] || 0) + inv.total_amount
+    })
+    return Object.entries(months)
+      .sort()
+      .slice(-6)
+      .map(([month, revenue]) => ({
+        month: new Date(`${month}-01`).toLocaleString('default', { month: 'short', year: '2-digit' }),
+        revenue
+      }))
+  })() : []
+
+  // Calculate occupancy rate
+  const occupancyData = (() => {
+    const days = {}
+    bookings
+      .filter(b => ['confirmed', 'checked_in'].includes(b.status))
+      .forEach(b => {
+        const start = new Date(b.check_in)
+        const end = new Date(b.check_out)
+        for (let d = new Date(start); d < end; d.setDate(d.getDate() + 1)) {
+          const dateKey = d.toISOString().split('T')[0]
+          days[dateKey] = (days[dateKey] || 0) + 1
+        }
+      })
+    return Object.entries(days)
+      .sort()
+      .slice(-7)
+      .map(([date, occupied]) => ({
+        date: new Date(date).toLocaleString('default', { month: 'short', day: 'numeric' }),
+        occupancy: Math.round((occupied / rooms.length) * 100) || 0
+      }))
+  })()
+
+  // Room type distribution
+  const roomTypeData = (() => {
+    const types = {}
+    rooms.forEach(r => {
+      types[r.room_type] = (types[r.room_type] || 0) + 1
+    })
+    return Object.entries(types).map(([type, count]) => ({ name: type, value: count }))
+  })()
+
+  const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444']
+
   const recentBookings = [...bookings]
     .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
     .slice(0, 5)
@@ -71,6 +122,67 @@ export default function Dashboard() {
           <StatCard title="Total Revenue" value={`₹${totalRevenue.toLocaleString()}`} icon="💰" color="bg-emerald-50" />
         )}
       </div>
+
+      {/* Analytics Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        {/* Monthly Revenue Chart (Admin Only) */}
+        {user?.role === 'admin' && monthlyRevenueData.length > 0 && (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+            <h3 className="text-lg font-semibold text-slate-800 mb-4">Monthly Revenue</h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={monthlyRevenueData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="month" />
+                <YAxis />
+                <Tooltip formatter={(value) => `₹${value.toLocaleString()}`} />
+                <Bar dataKey="revenue" fill="#3b82f6" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+
+        {/* Occupancy Rate Chart */}
+        {occupancyData.length > 0 && (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+            <h3 className="text-lg font-semibold text-slate-800 mb-4">Occupancy Rate (Last 7 Days)</h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={occupancyData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" />
+                <YAxis domain={[0, 100]} />
+                <Tooltip formatter={(value) => `${value}%`} />
+                <Line type="monotone" dataKey="occupancy" stroke="#10b981" strokeWidth={2} dot={{ fill: '#10b981' }} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+      </div>
+
+      {/* Room Type Distribution */}
+      {roomTypeData.length > 0 && (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-8">
+          <h3 className="text-lg font-semibold text-slate-800 mb-4">Room Type Distribution</h3>
+          <ResponsiveContainer width="100%" height={300}>
+            <PieChart>
+              <Pie
+                data={roomTypeData}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                label={({ name, value }) => `${name}: ${value}`}
+                outerRadius={100}
+                fill="#8884d8"
+                dataKey="value"
+              >
+                {roomTypeData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+      )}
 
       {/* Recent Bookings */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100">

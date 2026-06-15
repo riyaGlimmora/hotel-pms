@@ -21,6 +21,8 @@ export default function Rooms() {
   const [showModal, setShowModal] = useState(false)
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState(empty)
+  const [filterStatus, setFilterStatus] = useState('all')
+  const [filterType, setFilterType] = useState('all')
 
   const { data: rooms = [], isLoading } = useQuery({
     queryKey: ['rooms'],
@@ -60,6 +62,11 @@ export default function Rooms() {
     else createRoom.mutate(data)
   }
 
+  const filtered = rooms.filter(r => 
+    (filterStatus === 'all' || r.status === filterStatus) &&
+    (filterType === 'all' || r.room_type === filterType)
+  )
+
   return (
     <div className="p-8">
       <div className="flex items-center justify-between mb-8">
@@ -80,8 +87,20 @@ export default function Rooms() {
         {STATUSES.map(s => (
           <div key={s} className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 text-center">
             <p className="text-2xl font-bold text-slate-800">{rooms.filter(r => r.status === s).length}</p>
-            <p className={`text-xs font-medium mt-1 px-2 py-0.5 rounded-full inline-block capitalize ${statusColor[s]}`}>{s}</p>
-          </div>
+          Filters */}
+      <div className="grid grid-cols-2 gap-4 mb-6">
+        <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
+          className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+          <option value="all">All Statuses</option>
+          {STATUSES.map(s => <option key={s} value={s} className="capitalize">{s.charAt(0).toUpperCase() + s.slice(1)}</option>)}
+        </select>
+        <select value={filterType} onChange={e => setFilterType(e.target.value)}
+          className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+          <ofiltered.length === 0 ? (
+          <div className="p-12 text-center text-slate-400">
+            <p className="text-4xl mb-3">🛏️</p>
+            <p className="font-medium">No rooms match your filters</p>
+            <p className="text-sm mt-1">Try adjusting your search criteria
         ))}
       </div>
 
@@ -106,7 +125,7 @@ export default function Rooms() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {rooms.map(room => (
+                {filtered.map(room => (
                   <tr key={room.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 text-sm font-bold text-slate-800">#{room.room_number}</td>
                     <td className="px-6 py-4 text-sm text-slate-600">{room.room_type}</td>
