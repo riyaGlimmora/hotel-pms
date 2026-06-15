@@ -46,6 +46,43 @@ export default function Bookings() {
 
   const handleSubmit = e => {
     e.preventDefault()
+    
+    // Validation
+    if (!form.guest_name.trim()) {
+      toast.error('Please enter guest name')
+      return
+    }
+    if (!form.num_guests || parseInt(form.num_guests) <= 0) {
+      toast.error('Number of guests must be at least 1')
+      return
+    }
+    if (!form.room_id) {
+      toast.error('Please select a room')
+      return
+    }
+    if (!form.check_in) {
+      toast.error('Please select check-in date')
+      return
+    }
+    if (!form.check_out) {
+      toast.error('Please select check-out date')
+      return
+    }
+    if (form.check_out <= form.check_in) {
+      toast.error('Check-out date must be after check-in date')
+      return
+    }
+    
+    const checkInDate = new Date(form.check_in)
+    const checkOutDate = new Date(form.check_out)
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    
+    if (checkInDate < today) {
+      toast.error('Check-in date cannot be in the past')
+      return
+    }
+    
     createBooking.mutate({ ...form, num_guests: parseInt(form.num_guests), room_id: parseInt(form.room_id) })
   }
 
@@ -169,20 +206,23 @@ export default function Bookings() {
             <h2 className="text-lg font-semibold text-slate-800 mb-4">New Booking</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Guest Name</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Guest Name *</label>
                 <input required value={form.guest_name}
                   onChange={e => setForm({...form, guest_name: e.target.value})}
+                  placeholder="John Smith"
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="John Smith" />
+                />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Number of Guests</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Number of Guests *</label>
                 <input required type="number" min="1" value={form.num_guests}
                   onChange={e => setForm({...form, num_guests: e.target.value})}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="1"
+                />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Room</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Room *</label>
                 <select required value={form.room_id} onChange={e => setForm({...form, room_id: e.target.value})}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                   <option value="">Select a room</option>
@@ -193,33 +233,38 @@ export default function Bookings() {
                   ))}
                 </select>
                 {availableRooms.length === 0 && (
-                  <p className="text-xs text-red-500 mt-1">No available rooms. Please add rooms first.</p>
+                  <p className="text-xs text-red-500 mt-1">❌ No available rooms. All rooms are booked or under maintenance.</p>
                 )}
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Check-in</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Check-in *</label>
                   <input required type="date" value={form.check_in}
                     min={new Date().toISOString().split('T')[0]}
                     onChange={e => setForm({...form, check_in: e.target.value})}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Check-out</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Check-out *</label>
                   <input required type="date" value={form.check_out}
                     min={form.check_in || new Date().toISOString().split('T')[0]}
                     onChange={e => setForm({...form, check_out: e.target.value})}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
                 </div>
               </div>
+              {form.check_in && form.check_out && form.check_out > form.check_in && (
+                <div className="bg-blue-50 border border-blue-200 px-3 py-2 rounded-lg text-sm text-blue-700">
+                  📅 {Math.ceil((new Date(form.check_out) - new Date(form.check_in)) / (1000 * 60 * 60 * 24))} nights
+                </div>
+              )}
               <div className="flex gap-3 pt-2">
-                <button type="button" onClick={closeModal}
-                  className="flex-1 px-4 py-2 border border-gray-300 text-slate-700 rounded-lg hover:bg-gray-50 text-sm">
+                <button type="button" onClick={closeModal} disabled={createBooking.isPending}
+                  className="flex-1 px-4 py-2 border border-gray-300 text-slate-700 rounded-lg hover:bg-gray-50 text-sm disabled:opacity-50">
                   Cancel
                 </button>
-                <button type="submit"
-                  className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium">
-                  Create Booking
+                <button type="submit" disabled={createBooking.isPending}
+                  className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium disabled:opacity-50">
+                  {createBooking.isPending ? '⏳ Creating...' : 'Create Booking'}
                 </button>
               </div>
             </form>
