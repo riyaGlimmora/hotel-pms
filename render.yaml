@@ -13,4 +13,4 @@ services:
       - key: ACCESS_TOKEN_EXPIRE_MINUTES
         value: 10080
       - key: DATABASE_URL
-        value: sqlite:///./hotel.db
+        value: postgresql://hotel_pms_i1xm_user:pMWO3X7zp8dDDHd4tUumjVzMl8MUATGU@dpg-d8noopflk1mc739v002g-a/hotel_pms_i1xm
