@@ -1,10 +1,14 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.database import Base, engine
+from app.database import Base, engine, SessionLocal
 from app.models import user, room, booking, invoice, guest, extra_charge
 from app.routers import auth, rooms, bookings, checkin, invoices, availability, guests, extra_charges
+from app.seed import seed_default_users
 
 Base.metadata.create_all(bind=engine)
+
+with SessionLocal() as db:
+    seed_default_users(db)
 
 app = FastAPI(title="Hotel PMS API", version="1.0.0")
 
