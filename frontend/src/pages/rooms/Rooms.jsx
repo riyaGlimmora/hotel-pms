@@ -82,27 +82,59 @@ export default function Rooms() {
         )}
       </div>
 
-      {/* Stats row */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
-        {STATUSES.map(s => (
-          <div key={s} className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 text-center">
-            <p className="text-2xl font-bold text-slate-800">{rooms.filter(r => r.status === s).length}</p>
-          Filters */}
-      <div className="grid grid-cols-2 gap-4 mb-6">
-        <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
-          className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
-          <option value="all">All Statuses</option>
-          {STATUSES.map(s => <option key={s} value={s} className="capitalize">{s.charAt(0).toUpperCase() + s.slice(1)}</option>)}
-        </select>
-        <select value={filterType} onChange={e => setFilterType(e.target.value)}
-          className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
-          <ofiltered.length === 0 ? (
-          <div className="p-12 text-center text-slate-400">
-            <p className="text-4xl mb-3">🛏️</p>
-            <p className="font-medium">No rooms match your filters</p>
-            <p className="text-sm mt-1">Try adjusting your search criteria
-        ))}
-      </div>
+    {/* Stats row */}
+<div className="grid grid-cols-3 gap-4 mb-6">
+  {STATUSES.map(s => (
+    <div
+      key={s}
+      className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 text-center"
+    >
+      <p className="text-2xl font-bold text-slate-800">
+        {rooms.filter(r => r.status === s).length}
+      </p>
+      <p className="text-sm text-slate-500 capitalize">{s}</p>
+    </div>
+  ))}
+</div>
+
+{/* Filters */}
+<div className="grid grid-cols-2 gap-4 mb-6">
+  <select
+    value={filterStatus}
+    onChange={e => setFilterStatus(e.target.value)}
+    className="px-4 py-2 border border-gray-300 rounded-lg"
+  >
+    <option value="all">All Statuses</option>
+    {STATUSES.map(s => (
+      <option key={s} value={s}>
+        {s}
+      </option>
+    ))}
+  </select>
+
+  <select
+    value={filterType}
+    onChange={e => setFilterType(e.target.value)}
+    className="px-4 py-2 border border-gray-300 rounded-lg"
+  >
+    <option value="all">All Types</option>
+    {ROOM_TYPES.map(t => (
+      <option key={t} value={t}>
+        {t}
+      </option>
+    ))}
+  </select>
+</div>
+
+{filtered.length === 0 && !isLoading && (
+  <div className="p-12 text-center text-slate-400">
+    <p className="text-4xl mb-3">🛏️</p>
+    <p className="font-medium">No rooms match your filters</p>
+    <p className="text-sm mt-1">
+      Try adjusting your search criteria
+    </p>
+  </div>
+)}
 
       {/* Table */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100">

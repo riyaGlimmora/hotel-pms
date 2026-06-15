@@ -28,13 +28,16 @@ export default function CheckIn() {
   })
 
   const checkOut = useMutation({
-    
+    mutationFn: id => api.post(`/api/checkin/${id}/checkout`),
+    onSuccess: () => { toast.success('Guest checked out successfully!'); qc.invalidateQueries(['bookings']); qc.invalidateQueries(['rooms']); qc.invalidateQueries(['invoices']) },
+    onError: e => toast.error(e.response?.data?.detail || 'Failed to check out')
+  })
 
   const addCharge = useMutation({
     mutationFn: ({ bookingId, data }) => api.post(`/api/extra-charges/booking/${bookingId}`, data),
-    onSuccess: (_, { bookingId }) => { 
-      toast.success('Charge added!'); 
-      loadCharges(bookingId);
+    onSuccess: (_, { bookingId }) => {
+      toast.success('Charge added!')
+      loadCharges(bookingId)
       setChargesForm({ description: '', amount: '' })
     },
     onError: e => toast.error(e.response?.data?.detail || 'Failed to add charge')
@@ -42,9 +45,8 @@ export default function CheckIn() {
 
   const deleteCharge = useMutation({
     mutationFn: chargeId => api.delete(`/api/extra-charges/${chargeId}`),
-    onSuccess: (_, chargeId) => { 
-      toast.success('Charge deleted!');
-      // Reload charges for the modal
+    onSuccess: (_, chargeId) => {
+      toast.success('Charge deleted!')
       const bookingId = Object.keys(bookingCharges).find(bid => bookingCharges[bid].some(c => c.id === chargeId))
       if (bookingId) loadCharges(parseInt(bookingId))
     },
@@ -55,7 +57,7 @@ export default function CheckIn() {
     try {
       const res = await api.get(`/api/extra-charges/booking/${bookingId}`)
       setBookingCharges(prev => ({ ...prev, [bookingId]: res.data }))
-    } catch (err) {
+    } catch {
       console.log('No charges for this booking')
     }
   }
@@ -65,18 +67,15 @@ export default function CheckIn() {
     loadCharges(booking.id)
   }
 
-  const handleAddCharge = async (bookingId) => {
+  const handleAddCharge = (bookingId) => {
     if (!chargesForm.description || !chargesForm.amount) {
       toast.error('Please fill in all fields')
       return
     }
     addCharge.mutate({ bookingId, data: { description: chargesForm.description, amount: parseFloat(chargesForm.amount) } })
-  }mutationFn: id => api.post(`/api/checkin/${id}/checkout`),
-    onSuccess: () => { toast.success('Guest checked out successfully!'); qc.invalidateQueries(['bookings']); qc.invalidateQueries(['rooms']); qc.invalidateQueries(['invoices']) },
-    onError: e => toast.error(e.response?.data?.detail || 'Failed to check out')
-  })
+  }
 
-  const active = bookings.filter(b => ['confirmed','checked_in'].includes(b.status))
+  const active = bookings.filter(b => ['confirmed', 'checked_in'].includes(b.status))
 
   const nights = (checkin, checkout) => {
     const diff = new Date(checkout) - new Date(checkin)
@@ -84,23 +83,10 @@ export default function CheckIn() {
   }
 
   return (
-    <div className="p-8">Room Charge</p>
-                        <p className="font-medium text-slate-700">₹{total.toLocaleString()}</p>
-                      </div>
-                    </div>
-                    {b.status === 'checked_in' && bookingCharges[b.id]?.length > 0 && (
-                      <div className="mt-4 pt-4 border-t border-gray-200">
-                        <p className="text-xs text-slate-500 mb-2">Extra Charges:</p>
-                        <div className="space-y-1">
-                          {bookingCharges[b.id].map(charge => (
-                            <div key={charge.id} className="flex justify-between items-center text-sm text-slate-600">
-                              <span>{charge.description}</span>
-                              <span className="font-medium">₹{charge.amount.toLocaleString()}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}-slate-500 text-sm mt-1">{active.length} active bookings</p>
+    <div className="p-8">
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-slate-800">Check-in / Check-out</h1>
+        <p className="text-slate-500 text-sm mt-1">{active.length} active bookings</p>
       </div>
 
       {isLoading ? (
@@ -115,7 +101,9 @@ export default function CheckIn() {
         <div className="grid gap-4">
           {active.map(b => {
             const n = nights(b.check_in, b.check_out)
-            const total = n * (b.room?.price_per_night || 0)
+            const roomTotal = n * (b.room?.price_per_night || 0)
+            const extraTotal = (bookingCharges[b.id] || []).reduce((sum, c) => sum + c.amount, 0)
+            const total = roomTotal + extraTotal
             return (
               <div key={b.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                 <div className="flex items-start justify-between">
@@ -123,7 +111,7 @@ export default function CheckIn() {
                     <div className="flex items-center gap-3 mb-3">
                       <h3 className="text-lg font-semibold text-slate-800">{b.guest_name}</h3>
                       <span className={`text-xs px-2 py-1 rounded-full font-medium capitalize ${statusColor[b.status]}`}>
-                        {b.status.replace('_',' ')}
+                        {b.status.replace('_', ' ')}
                       </span>
                     </div>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
@@ -144,6 +132,19 @@ export default function CheckIn() {
                         <p className="font-medium text-slate-700">{n} nights — ₹{total.toLocaleString()}</p>
                       </div>
                     </div>
+                    {b.status === 'checked_in' && bookingCharges[b.id]?.length > 0 && (
+                      <div className="mt-4 pt-4 border-t border-gray-200">
+                        <p className="text-xs text-slate-500 mb-2">Extra Charges:</p>
+                        <div className="space-y-1">
+                          {bookingCharges[b.id].map(charge => (
+                            <div key={charge.id} className="flex justify-between items-center text-sm text-slate-600">
+                              <span>{charge.description}</span>
+                              <span className="font-medium">₹{charge.amount.toLocaleString()}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                   <div className="ml-6 flex flex-col gap-2">
                     {b.status === 'confirmed' && (
@@ -165,8 +166,13 @@ export default function CheckIn() {
                       </>
                     )}
                   </div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
 
-      {/* Extra Charges Modal */}
       {chargesModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
@@ -175,7 +181,6 @@ export default function CheckIn() {
               <button onClick={() => setChargesModal(null)} className="text-2xl text-slate-400 hover:text-slate-600">×</button>
             </div>
 
-            {/* Current Charges */}
             {bookingCharges[chargesModal.id]?.length > 0 ? (
               <div className="mb-6 p-4 bg-gray-50 rounded-lg space-y-2 max-h-48 overflow-y-auto">
                 {bookingCharges[chargesModal.id].map(charge => (
@@ -195,14 +200,13 @@ export default function CheckIn() {
               <p className="text-sm text-slate-500 mb-4">No extra charges added yet</p>
             )}
 
-            {/* Add Charge Form */}
             <div className="space-y-3 border-t pt-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Description</label>
                 <input
                   type="text"
                   value={chargesForm.description}
-                  onChange={e => setChargesForm({...chargesForm, description: e.target.value})}
+                  onChange={e => setChargesForm({ ...chargesForm, description: e.target.value })}
                   placeholder="e.g., Mini bar, Room service..."
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
@@ -213,7 +217,7 @@ export default function CheckIn() {
                   type="number"
                   min="0"
                   value={chargesForm.amount}
-                  onChange={e => setChargesForm({...chargesForm, amount: e.target.value})}
+                  onChange={e => setChargesForm({ ...chargesForm, amount: e.target.value })}
                   placeholder="0.00"
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
@@ -230,12 +234,6 @@ export default function CheckIn() {
               </div>
             </div>
           </div>
-        </div>
-      )}
-                </div>
-              </div>
-            )
-          })}
         </div>
       )}
     </div>
