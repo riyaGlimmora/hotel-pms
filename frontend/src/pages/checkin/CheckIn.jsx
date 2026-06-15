@@ -139,20 +139,11 @@ export default function CheckIn() {
                         <p className="text-slate-400 text-xs">Check-out</p>
                         <p className="font-medium text-slate-700">{b.check_out}</p>
                       </div>
-                      <div className="flex gap-2">
-                        {b.status === 'checked_in' && (
-                          <button onClick={() => openChargesModal(b)}
-                            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap">
-                            💰 Add Charges
-                          </button>
-                        )}
-                        {b.status === 'checked_in' && (
-                          <button onClick={() => checkOut.mutate(b.id)}
-                            className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap">
-                            🚪 Check Out
-                          </button>
-                        )}
+                      <div>
+                        <p className="text-slate-400 text-xs">Duration / Amount</p>
+                        <p className="font-medium text-slate-700">{n} nights — ₹{total.toLocaleString()}</p>
                       </div>
+                    </div>
                   </div>
                   <div className="ml-6 flex flex-col gap-2">
                     {b.status === 'confirmed' && (
@@ -162,10 +153,16 @@ export default function CheckIn() {
                       </button>
                     )}
                     {b.status === 'checked_in' && (
-                      <button onClick={() => checkOut.mutate(b.id)}
-                        className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap">
-                        🚪 Check Out
-                      </button>
+                      <>
+                        <button onClick={() => openChargesModal(b)}
+                          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap">
+                          💰 Add Charges
+                        </button>
+                        <button onClick={() => checkOut.mutate(b.id)}
+                          className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap">
+                          🚪 Check Out
+                        </button>
+                      </>
                     )}
                   </div>
 
